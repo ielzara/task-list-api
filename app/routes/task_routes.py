@@ -25,6 +25,10 @@ def validate_task(task_id):
 @tasks_bp.post("")
 def create_task():
     request_body = request.get_json()
+
+    if "title" not in request_body or "description" not in request_body:
+        return {"details": "Invalid data"}, 400
+    
     title = request_body["title"]
     description=request_body["description"]
 
@@ -35,7 +39,7 @@ def create_task():
     db.session.add(new_task)
     db.session.commit()
 
-    return new_task.to_dict(), 201
+    return {"task": new_task.to_dict()}, 201
 
 # READ ALL
 @tasks_bp.get("")
@@ -54,18 +58,16 @@ def get_all_tasks():
     
     tasks = db.session.scalars(query)
     
-    return {
-        "tasks": [task.to_dict() for task in tasks]
-    }
+    return [task.to_dict() for task in tasks], 200
 
 # READ ONE
 @tasks_bp.get("/<task_id>")
 def get_one_task(task_id):
     task = validate_task(task_id)
 
-    return task.to_dict()
+    return {"task": task.to_dict()}, 200
 
-#UPDATE
+# UPDATE
 @tasks_bp.put("/<task_id>")
 def update_task(task_id):
     task = validate_task(task_id)
@@ -75,13 +77,14 @@ def update_task(task_id):
     task.description = request_body["description"]
     db.session.commit()
 
-    return Response(status=204, mimetype="application/json")
+    return {"task": task.to_dict()}, 200
 
-#DELETE
+# DELETE
 @tasks_bp.delete("/<task_id>")
 def delete_task(task_id):
     task = validate_task(task_id)
+    task_title = task.title
     db.session.delete(task)
     db.session.commit()
 
-    return Response(status=204, mimetype="application/json")
+    return {"details": f'Task {task_id} "{task_title}" successfully deleted'}, 200

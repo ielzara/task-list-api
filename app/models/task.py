@@ -17,11 +17,10 @@ class Task(db.Model):
         return False
 
     def to_dict(self):
-        """Convert task to dictionary for API responses"""
+    
         return {
             "id": self.id,
             "title": self.title,
-            "description": self.description,
-            "completed_at": None, 
+            "description": self.description, 
             "is_complete": False,
         }
