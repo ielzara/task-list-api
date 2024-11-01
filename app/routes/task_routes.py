@@ -97,3 +97,24 @@ def delete_task(task_id):
     db.session.commit()
 
     return {"details": f'Task {task_id} "{task_title}" successfully deleted'}, 200
+
+@tasks_bp.patch("/<task_id>/mark_complete")
+def mark_task_complete(task_id):
+    task = validate_task(task_id)
+
+    task.mark_complete()
+
+    db.session.commit()
+
+    return {"task": task.to_dict()}, 200
+
+
+@tasks_bp.patch("/<task_id>/mark_incomplete")
+def mark_task_incomplete(task_id):
+    task = validate_task(task_id)
+
+    task.mark_incomplete()
+
+    db.session.commit()
+
+    return {"task": task.to_dict()}, 200

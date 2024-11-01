@@ -13,14 +13,19 @@ class Task(db.Model):
     )
     @property
     def is_complete(self):
-        # For now, always return False (as specified for waves 1-2)
-        return False
+        return self.completed_at is not None
+
+    def mark_complete(self):
+        self.completed_at = datetime.now()
+
+    def mark_incomplete(self):
+        self.completed_at = None
 
     def to_dict(self):
-    
+
         return {
             "id": self.id,
             "title": self.title,
-            "description": self.description, 
-            "is_complete": False,
+            "description": self.description,
+            "is_complete": self.is_complete,
         }
