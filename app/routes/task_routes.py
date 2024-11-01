@@ -45,19 +45,30 @@ def create_task():
 @tasks_bp.get("")
 def get_all_tasks():
     query = db.select(Task)
-    
+
     title_param = request.args.get("title")
     if title_param:
         query = query.where(Task.title.ilike(f"%{title_param}%"))
-    
+
     description_param = request.args.get("description")
     if description_param:
         query = query.where(Task.description.ilike(f"%{description_param}%"))
-    
+
+    sort_param = request.args.get("sort")
+    if sort_param:
+        if sort_param.lower() == "desc":
+            query = query.order_by(Task.title.desc())
+        elif sort_param.lower() == "asc":
+            query = query.order_by(Task.title.asc())
+        else:
+            query = query.order_by(Task.id)
+    else:
+        query = query.order_by(Task.id)
+
     query = query.order_by(Task.id)
-    
+
     tasks = db.session.scalars(query)
-    
+
     return [task.to_dict() for task in tasks], 200
 
 # READ ONE
