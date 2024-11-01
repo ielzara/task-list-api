@@ -65,8 +65,6 @@ def get_all_tasks():
     else:
         query = query.order_by(Task.id)
 
-    query = query.order_by(Task.id)
-
     tasks = db.session.scalars(query)
 
     return [task.to_dict() for task in tasks], 200
