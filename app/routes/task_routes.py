@@ -1,8 +1,28 @@
 from flask import Blueprint, abort, make_response, request, Response
 from app.models.task import Task
+import os
+import requests
 from ..db import db
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
+
+# SEND SLACK NOTIFICATION
+def send_slack_notification(task_title):
+    slack_token = os.environ.get("SLACK_BOT_TOKEN")
+
+    url = "https://slack.com/api/chat.postMessage"
+
+    headers = {
+        "Authorization": f"Bearer {slack_token}",
+        "Content-Type": "application/json",
+    }
+
+    message_body = {
+        "channel": "task-notifications",
+        "text": f"Someone just completed the task {task_title}",
+    }
+
+    requests.post(url, headers=headers, json=message_body)
 
 # VALIDATE
 def validate_task(task_id):
@@ -98,6 +118,7 @@ def delete_task(task_id):
 
     return {"details": f'Task {task_id} "{task_title}" successfully deleted'}, 200
 
+# MARK COMPLETE
 @tasks_bp.patch("/<task_id>/mark_complete")
 def mark_task_complete(task_id):
     task = validate_task(task_id)
@@ -106,9 +127,11 @@ def mark_task_complete(task_id):
 
     db.session.commit()
 
+    send_slack_notification(task.title)
+
     return {"task": task.to_dict()}, 200
 
-
+# MARK INCOMPLETE
 @tasks_bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):
     task = validate_task(task_id)
