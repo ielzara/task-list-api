@@ -29,7 +29,6 @@ def test_get_goals_one_saved_goal(client, one_goal):
         }
     ]
 
-
 # @pytest.mark.skip(reason="No way to test this feature yet")
 def test_get_goal(client, one_goal):
     # Act
@@ -61,7 +60,7 @@ def test_get_goal_not_found(client):
     # assertion 2 goes here
     assert response.status_code == 404
     assert "message" in response_body
-    assert response_body["message"] == "goal 1 not found"
+    assert response_body["message"] == "Goal 1 not found"
     # ---- Complete Test ----
 
 
@@ -134,7 +133,7 @@ def test_update_goal_not_found(client):
     # assertion 2 goes here
     assert response.status_code == 404
     assert "message" in response_body
-    assert response_body["message"] == "goal 1 not found"
+    assert response_body["message"] == "Goal 1 not found"
     # ---- Complete Assertions Here ----
 
 
@@ -181,7 +180,7 @@ def test_delete_goal_not_found(client):
     # assertion 2 goes here
     assert response.status_code == 404
     assert "message" in response_body
-    assert response_body["message"] == "goal 1 not found"
+    assert response_body["message"] == "Goal 1 not found"
 
 
     # ---- Complete Assertions Here ----
