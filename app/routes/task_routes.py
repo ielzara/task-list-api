@@ -3,9 +3,9 @@ from app.models.task import Task
 import os
 import requests
 from ..db import db
-from .route_utilities import validate_model
+from .route_utilities import validate_model, create_model, get_models_with_filters
 
-tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
+bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
 # SEND SLACK NOTIFICATION
 def send_slack_notification(task_title):
@@ -25,63 +25,37 @@ def send_slack_notification(task_title):
 
     requests.post(url, headers=headers, json=message_body)
 
+
 # CREATE
-@tasks_bp.post("")
+@bp.post("")
 def create_task():
     request_body = request.get_json()
 
+    # Check for required fields before calling create_model
     if "title" not in request_body or "description" not in request_body:
-        return {"details": "Invalid data"}, 400
-    
-    title = request_body["title"]
-    description=request_body["description"]
+        return make_response({"details": "Invalid data"}, 400)
 
-    new_task = Task(
-        title=title, description=description
-    )
+    response = create_model(Task, request_body)
+    task_dict = response.get_json()
+    return make_response({"task": task_dict}, 201)
 
-    db.session.add(new_task)
-    db.session.commit()
-
-    return {"task": new_task.to_dict()}, 201
 
 # READ ALL
-@tasks_bp.get("")
+@bp.get("")
 def get_all_tasks():
-    query = db.select(Task)
 
-    title_param = request.args.get("title")
-    if title_param:
-        query = query.where(Task.title.ilike(f"%{title_param}%"))
+    return get_models_with_filters(Task, request.args)
 
-    description_param = request.args.get("description")
-    if description_param:
-        query = query.where(Task.description.ilike(f"%{description_param}%"))
-
-    sort_param = request.args.get("sort")
-    if sort_param:
-        if sort_param.lower() == "desc":
-            query = query.order_by(Task.title.desc())
-        elif sort_param.lower() == "asc":
-            query = query.order_by(Task.title.asc())
-        else:
-            query = query.order_by(Task.id)
-    else:
-        query = query.order_by(Task.id)
-
-    tasks = db.session.scalars(query)
-
-    return [task.to_dict() for task in tasks], 200
 
 # READ ONE
-@tasks_bp.get("/<task_id>")
+@bp.get("/<task_id>")
 def get_one_task(task_id):
     task = validate_model(Task, task_id)
-
     return {"task": task.to_dict()}, 200
 
+
 # UPDATE
-@tasks_bp.put("/<task_id>")
+@bp.put("/<task_id>")
 def update_task(task_id):
     task = validate_model(Task, task_id)
     request_body = request.get_json()
@@ -93,7 +67,7 @@ def update_task(task_id):
     return {"task": task.to_dict()}, 200
 
 # DELETE
-@tasks_bp.delete("/<task_id>")
+@bp.delete("/<task_id>")
 def delete_task(task_id):
     task = validate_model(Task, task_id)
     task_title = task.title
@@ -103,7 +77,7 @@ def delete_task(task_id):
     return {"details": f'Task {task_id} "{task_title}" successfully deleted'}, 200
 
 # MARK COMPLETE
-@tasks_bp.patch("/<task_id>/mark_complete")
+@bp.patch("/<task_id>/mark_complete")
 def mark_task_complete(task_id):
     task = validate_model(Task, task_id)
 
@@ -116,7 +90,7 @@ def mark_task_complete(task_id):
     return {"task": task.to_dict()}, 200
 
 # MARK INCOMPLETE
-@tasks_bp.patch("/<task_id>/mark_incomplete")
+@bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):
     task = validate_model(Task, task_id)
 
